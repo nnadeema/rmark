@@ -1,0 +1,251 @@
+---
+title: "First Markdown Document"
+output: html_document
+date: "2023-06-03"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(comment = NA, warning = FALSE, message = FALSE)
+```
+
+## OECD income data 
+
+This is a first attempt to do an actual analysis in R enviroment with markdown setup. I have downloaded the data directly from OECD through get_dataset, and smooth the data in order to have one value of Gini Coefficient for each year (there are year wise duplicated values with different methodology). The data variables on Time and Gini values also needed to be converted to numeric. 
+
+```{r comment=NA, echo=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(OECD)
+library(tidyverse, quietly = TRUE)
+library(ggrepel)
+library(hrbrthemes)
+```
+
+```{r, echo=FALSE}
+idd <- get_dataset('IDD', 
+                   filter = list(c("FRA", "DEU", "AUS", "AUT", "ITA", "GBR")), start_time = 2000)
+#subsetting the data frame based on Gini co-efficient only
+gini <- subset(idd, MEASURE == 'GINI')
+```
+
+### Australia
+
+```{r, echo=FALSE}
+ausgini <- subset(gini, LOCATION == 'AUS')
+ausgini <- ausgini[!duplicated(ausgini$Time),]
+ausgini$ObsValue <-as.numeric(ausgini$ObsValue)
+ausgini$Time <- as.numeric(ausgini$Time)
+```
+
+```{r ausgini, echo=FALSE}
+ggplot(data=ausgini, aes(x=Time, y=ObsValue, color = LOCATION))+
+  geom_line()+
+  scale_y_continuous(limits = c(.2, .4))+
+  theme_bw()+
+  theme(legend.position = 'none')
+```
+
+### Germany
+
+```{r, echo=FALSE}
+deugini <- subset(gini, LOCATION == 'DEU')
+deugini0 <-  deugini[!duplicated(deugini$Time),]
+deugini0$ObsValue <-as.numeric(deugini0$ObsValue)
+deugini0$Time <- as.numeric(deugini0$Time)
+
+```
+
+```{r deugini0, echo=FALSE}
+ggplot(data=deugini0, aes(x=Time, y=ObsValue, color = LOCATION))+
+  geom_line()+ 
+  scale_y_continuous(limits=c(.2, .4))+
+  theme_bw()+
+  theme(legend.position = "none")
+```
+
+### France
+
+```{r, echo=FALSE}
+fragini <- subset(gini, LOCATION == 'FRA')
+fragini <-  fragini[!duplicated(fragini$Time),]
+fragini$ObsValue <- as.numeric(fragini$ObsValue)
+fragini$Time <- as.numeric(fragini$Time)
+```
+
+```{r fragini, echo=FALSE}
+ggplot(data=fragini, aes(x=Time, y=ObsValue, color = LOCATION))+
+  geom_line()+ 
+  scale_y_continuous(limits = c(.2, .4))+
+  theme_bw()+
+  theme(legend.position = "none")
+```
+
+### UK
+
+```{r, echo=FALSE}
+ukgini <- subset(gini, LOCATION == "GBR")
+ukgini <- ukgini[!duplicated(ukgini$Time),]
+ukgini$ObsValue <- as.numeric(ukgini$ObsValue)
+ukgini$Time <- as.numeric(ukgini$Time)
+```
+
+```{r ukgini, echo=FALSE}
+ggplot(data=ukgini, aes(x=Time, y=ObsValue, color = LOCATION))+
+  geom_line()+ 
+  scale_y_continuous(limits = c(.2, .4))+
+  theme_bw()+
+  theme(legend.position = "none" )
+```
+
+### Italy
+
+```{r, echo=FALSE}
+itgini <- subset(gini, LOCATION == "ITA")
+itgini <- itgini[!duplicated(itgini$Time),]
+itgini$ObsValue <- as.numeric(itgini$ObsValue)
+itgini$Time <- as.numeric(itgini$Time)
+```
+
+```{r itgini, echo=FALSE}
+ggplot(data=itgini, aes(x=Time, y=ObsValue, color = LOCATION))+
+  geom_line()+ 
+  scale_y_continuous(limits = c(.2, .4))+
+  theme_bw()+
+  theme(legend.position = "none")
+```
+
+### Austria
+
+```{r, echo=FALSE}
+asgini <- subset(gini, LOCATION == "AUT")
+asgini <- asgini[!duplicated(asgini$Time),]
+asgini$ObsValue <- as.numeric(asgini$ObsValue)
+asgini$Time <- as.numeric(asgini$Time)
+```
+
+```{r asgini, echo=FALSE}
+ggplot(data=asgini, aes(x=Time, y=ObsValue, color = LOCATION))+
+  geom_line()+ 
+  scale_y_continuous(limits = c(.2, .4))+
+  theme_bw()+
+  theme(legend.position = "none")
+```
+
+## Combining all these clean datasets as merged (appended by rows)
+
+In order to remove duplicate years from each country, I had to rely on some sort of extra steps: first by creating a subst for each country and then remove duplicates. Need to learn how to do this in main data frame by country :). After cleaning data for each country, I had to combine the data through row binding to have one data frame for final graph. 
+
+```{r, echo=FALSE}
+fgini <- rbind(ausgini, deugini0, fragini, ukgini, itgini, asgini)
+
+```
+
+# Main plot
+
+Main plot includes two set of graphs: the first one a sort of spaghetti chart and the second one as small multiple. Before going to have a main plot, lets add two other countries.  
+
+
+
+## Adding USA and Canada
+
+I have decided to include USA and Canada into the dataframe to compare. UAA and Canada appears to be two different countries. USA is generally at top among all the countries in the frame while Canada is the olny when which is showing decrease in the inequality in the last 5 years.
+
+```{r, echo=FALSE}
+
+#adding USA and Canada
+usca<-get_dataset('IDD', 
+           filter = list(c("USA", "CAN")), start_time = 2000)
+usagini <- subset(usca, LOCATION == "USA")
+usagini <- usagini[!duplicated(usagini$Time),]
+usagini <- usagini[,-6] # removing an extra column for usagini to be able to merge in fgini
+usagini$ObsValue <- as.numeric(usagini$ObsValue) 
+usagini$Time <- as.numeric((usagini$Time))
+```
+
+### USA
+
+```{r usagini, echo=FALSE}
+ggplot(usagini, aes(x = Time, y = ObsValue, color = LOCATION))+
+  geom_line()+
+  labs("", "", title = "USA Gini Coefficient")+
+  scale_y_continuous(limits = c(.2, .4))+
+  theme_bw()+
+  theme(legend.position = "none")
+```
+
+
+```{r, echo=FALSE}
+cagini <- subset(usca, LOCATION == "CAN")
+cagini <- cagini[!duplicated(cagini$Time),]
+cagini <- cagini[,-6]
+cagini$ObsValue <- as.numeric(cagini$ObsValue)
+cagini$Time <- as.numeric(cagini$Time)
+```
+
+### Canada
+
+```{r cagini, echo=FALSE}
+ggplot(cagini, aes(x = Time, y = ObsValue, color = LOCATION))+
+  geom_line()+
+  labs("", "", title = "Canada Gini Coefficient")+
+  scale_y_continuous(limits = c(.2, .4))+
+  theme_bw()+
+  theme(legend.position = "none")
+```
+
+```{r, echo=FALSE}
+ffgini <- rbind(fgini, usagini, cagini)
+
+#ggplot(ffgini, aes(x=Time, y=ObsValue, color = LOCATION))+
+#  geom_line()+
+#  scale_y_continuous(limits = c(.2, .4))+
+#  theme_bw()
+
+dfgini <- ffgini |>
+  mutate(cname = case_when(LOCATION == "AUS" & Time == 2020 ~ "Australia",
+                          LOCATION == "DEU" & Time == 2019 ~ "Germany",
+                          LOCATION == "FRA" & Time == 2019 ~ "France",
+                          LOCATION == "GBR" & Time == 2020 ~ "UK",
+                          LOCATION == "ITA" & Time == 2018 ~ "Italy",
+                          LOCATION == "AUT" & Time == 2019 ~ "Austria", 
+                          LOCATION == "USA" & Time == 2021 ~ "USA",
+                          LOCATION == "CAN" & Time == 2019 ~ "Canada"
+                          ))
+colnames(dfgini)[11] ="c11"
+#colnames(dfgini)[11] = "label"
+
+df_gini <- dfgini|>
+  mutate(locate=LOCATION)
+```
+
+```{r, echo=FALSE}
+ggplot(dfgini, aes(x=Time, y=ObsValue, color = LOCATION))+
+  geom_line()+
+   geom_label_repel(aes(label = c11))+
+  labs("", y = "Gini Coefficient", title = "OECD data on income inequality")+
+  scale_y_continuous(limits = c(.2, .4))+
+  theme_bw()+
+  theme(legend.position = "none")
+```
+
+Another way to represent the above graph could be to see individual countries in a one grid - the small multiples. 
+
+```{r df_gini, echo=FALSE}
+ggplot(df_gini, aes(x=Time, y=ObsValue))+
+  geom_line(data = df_gini %>% dplyr::select(-LOCATION), aes(group=locate), color='grey', size=1, alpha=0.5)+
+  #geom_line(aes(color=LOCATION), color="#69b3a2", size=1.2)+
+  geom_line(aes(color=LOCATION), color = '#5a189a', size=1.3)+ # trying some colors at https://coolors.co/palettes/popular
+  geom_label_repel(aes(label = c11), nudge_x = 1, size = 3)+
+  scale_color_viridis_d() +
+  theme_ipsum() +
+  labs("", y="Gini Coefficient", title = "OECD data on income inequality")+
+  theme(
+    legend.position="none",
+    plot.title = element_text(size=14),
+    panel.grid = element_blank()
+  ) +
+  facet_wrap(~LOCATION)
+```
+
+
