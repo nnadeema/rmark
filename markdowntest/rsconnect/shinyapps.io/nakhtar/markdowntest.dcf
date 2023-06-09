@@ -1,0 +1,13 @@
+name: markdowntest
+title: markdowntest
+username:
+account: nakhtar
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 9242879
+bundleId: 7301620
+url: https://nakhtar.shinyapps.io/markdowntest/
+when: 1685850897.68796
+lastSyncTime: 1685850897.68798
+asMultiple: FALSE
+asStatic: FALSE

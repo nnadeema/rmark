@@ -7,7 +7,11 @@ date: "2023-06-03"
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(comment = NA, warning = FALSE, message = FALSE)
+knitr::opts_chunk$set(fig.width=8, fig.height = 10, fig.asp=0.8, out.width="90%", fig.align="center",
+warning=FALSE, message=FALSE)
 ```
+
+
 
 ## OECD income data 
 
@@ -219,6 +223,7 @@ df_gini <- dfgini|>
   mutate(locate=LOCATION)
 ```
 
+Adding all above countries into one graph: The simplest way to show could be to having country name label at end of the respective country trend. 
 ```{r, echo=FALSE}
 ggplot(dfgini, aes(x=Time, y=ObsValue, color = LOCATION))+
   geom_line()+
